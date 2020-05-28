@@ -34,10 +34,8 @@ class Agent(object):
         order_ids = list(set(obs["order_id"] for obs in dispatch_observ))
         driver_ids = list(set(obs["driver_id"] for obs in dispatch_observ))
         dispatch_action = [
-            dict(
-                order_id=order_id,
-                driver_id=random.choice(driver_ids)
-            ) for order_id in order_ids
+            dict(order_id=order_id, driver_id=random.choice(driver_ids))
+            for order_id in order_ids
         ]
         return dispatch_action
 
@@ -58,6 +56,10 @@ class Agent(object):
         repo_action = []
         for driver in repo_observ['driver_info']:
             # the default reposition is to let drivers stay where they are
-            repo_action.append({'driver_id': driver['driver_id'],
-                                'destination': driver['grid_id']})
+            repo_action.append(
+                {
+                    'driver_id': driver['driver_id'],
+                    'destination': driver['grid_id']
+                }
+            )
         return repo_action
