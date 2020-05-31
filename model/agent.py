@@ -35,7 +35,7 @@ class Agent(object):
         driver_ids = set(obs["driver_id"] for obs in dispatch_observ)
         dispatch_action = []
         for order_id in list(order_ids):
-            driver_id = random.choice(driver_ids)
+            driver_id = random.choice(list(driver_ids))
             dispatch_action.append(
                 dict(order_id=order_id, driver_id=driver_id)
             )
