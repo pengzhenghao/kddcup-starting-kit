@@ -14,7 +14,6 @@ class Distribution():
 
 
 class PoissonDistribution(Distribution):
-
     def __init__(self, lam):
         self._lambda = lam
 
@@ -24,7 +23,6 @@ class PoissonDistribution(Distribution):
 
 
 class GaussianDistribution(Distribution):
-
     def __init__(self, args):
         mu, sigma = args
         self.mu = mu  # mean
@@ -36,11 +34,12 @@ class GaussianDistribution(Distribution):
 
 
 class Node(object):
-    __slots__ = ('neighbors', '_index', 'orders', 'drivers',
-                 'order_num', 'idle_driver_num', 'offline_driver_num'
-                                                 'order_generator',
-                 'offline_driver_num', 'order_generator',
-                 'n_side', 'layers_neighbors', 'layers_neighbors_id')
+    __slots__ = (
+        'neighbors', '_index', 'orders', 'drivers', 'order_num',
+        'idle_driver_num', 'offline_driver_num'
+        'order_generator', 'offline_driver_num', 'order_generator', 'n_side',
+        'layers_neighbors', 'layers_neighbors_id'
+    )
 
     def __init__(self, index):
         # private
@@ -123,20 +122,26 @@ class Node(object):
             price = 10 if price < 0 else price
 
             current_node_id = self.get_node_index()
-            destination_node = [kk for kk in np.arange(len(nodes)) if
-                                kk != current_node_id]
-            self.orders.append(Order(nodes[current_node_id],
-                                     nodes[
-                                         np.random.choice(destination_node, 1)[
-                                             0]],
-                                     city_time,
-                                     # city_time + np.random.choice(5, 1)[0]+1,
-                                     np.random.choice(2, 1)[0] + 1,  # duration
-                                     price, 1))
+            destination_node = [
+                kk for kk in np.arange(len(nodes)) if kk != current_node_id
+            ]
+            self.orders.append(
+                Order(
+                    nodes[current_node_id],
+                    nodes[np.random.choice(destination_node, 1)[0]],
+                    city_time,
+                    # city_time + np.random.choice(5, 1)[0]+1,
+                    np.random.choice(2, 1)[0] + 1,  # duration
+                    price,
+                    1
+                )
+            )
         return
 
-    def generate_order_real(self, l_max, order_time_dist, order_price_dist,
-                            city_time, nodes, seed):
+    def generate_order_real(
+            self, l_max, order_time_dist, order_price_dist, city_time, nodes,
+            seed
+    ):
         """Generate new orders at each time step
         """
         num_order_t = self.order_generator.sample(seed)
@@ -147,8 +152,9 @@ class Node(object):
                 duration = 1
             else:
 
-                duration = np.random.choice(np.arange(1, l_max + 1),
-                                            p=order_time_dist)
+                duration = np.random.choice(
+                    np.arange(1, l_max + 1), p=order_time_dist
+                )
             price_mean, price_std = order_price_dist[duration - 1]
             price = np.random.normal(price_mean, price_std, 1)[0]
             price = price if price > 0 else price_mean
@@ -159,22 +165,20 @@ class Node(object):
                 for kk in self.layers_neighbors_id[jj]:
                     if nodes[kk] is not None:
                         destination_node.append(kk)
-            self.orders.append(Order(nodes[current_node_id],
-                                     nodes[
-                                         np.random.choice(destination_node, 1)[
-                                             0]],
-                                     city_time,
-                                     duration,
-                                     price, 1))
+            self.orders.append(
+                Order(
+                    nodes[current_node_id],
+                    nodes[np.random.choice(destination_node, 1)[0]], city_time,
+                    duration, price, 1
+                )
+            )
         return
 
     def add_order_real(self, city_time, destination_node, duration, price):
         current_node_id = self.get_node_index()
-        self.orders.append(Order(self,
-                                 destination_node,
-                                 city_time,
-                                 duration,
-                                 price, 0))
+        self.orders.append(
+            Order(self, destination_node, city_time, duration, price, 0)
+        )
         self.order_num += 1
 
     def set_neighbors(self, nodes_list):
@@ -232,7 +236,8 @@ class Node(object):
         self.idle_driver_num -= 1
         if removed_driver is None:
             raise ValueError(
-                'Nodes.remove_driver: Remove a driver that is not in this node')
+                'Nodes.remove_driver: Remove a driver that is not in this node'
+            )
 
         return removed_driver
 
@@ -254,8 +259,10 @@ class Node(object):
 
         if len(un_finished_order_index) != 0:
             # remove unfinished orders
-            self.orders = [i for j, i in enumerate(self.orders) if
-                           j not in un_finished_order_index]
+            self.orders = [
+                i for j, i in enumerate(self.orders)
+                if j not in un_finished_order_index
+            ]
             self.order_num = len(self.orders)
 
     def simple_order_assign(self, city_time, city):
@@ -273,7 +280,8 @@ class Node(object):
                         assigned_driver.online is True:
                     assigned_driver.take_order(order_to_serve)
                     removed_driver = self.drivers.pop(
-                        assigned_driver.get_driver_id(), None)
+                        assigned_driver.get_driver_id(), None
+                    )
                     assert removed_driver is not None
                     city.n_drivers -= 1
                     break
@@ -282,8 +290,9 @@ class Node(object):
         finished_order_num = len(served_order_index)
 
         # remove served orders
-        self.orders = [i for j, i in enumerate(self.orders) if
-                       j not in served_order_index]
+        self.orders = [
+            i for j, i in enumerate(self.orders) if j not in served_order_index
+        ]
         assert self.order_num == len(self.orders)
 
         return reward, all_order_num, finished_order_num
@@ -305,7 +314,8 @@ class Node(object):
                     if order_to_serve.get_end_position() is not None:
                         assigned_driver.take_order(order_to_serve)
                         removed_driver = self.drivers.pop(
-                            assigned_driver.get_driver_id(), None)
+                            assigned_driver.get_driver_id(), None
+                        )
                         assert removed_driver is not None
                     else:
                         assigned_driver.set_offline()  # order destination is
@@ -317,8 +327,9 @@ class Node(object):
         finished_order_num = len(served_order_index)
 
         # remove served orders
-        self.orders = [i for j, i in enumerate(self.orders) if
-                       j not in served_order_index]
+        self.orders = [
+            i for j, i in enumerate(self.orders) if j not in served_order_index
+        ]
         assert self.order_num == len(self.orders)
 
         return reward, all_order_num, finished_order_num
@@ -330,10 +341,12 @@ class Node(object):
         num_finished_orders = 0
         for neighbor_node in self.neighbors:
             if neighbor_node is not None and neighbor_node.idle_driver_num > 0:
-                num_assigned_order = min(self.order_num,
-                                         neighbor_node.idle_driver_num)
-                rr = self.utility_assign_orders_neighbor(city, neighbor_node,
-                                                         num_assigned_order)
+                num_assigned_order = min(
+                    self.order_num, neighbor_node.idle_driver_num
+                )
+                rr = self.utility_assign_orders_neighbor(
+                    city, neighbor_node, num_assigned_order
+                )
                 reward += rr
                 neighbor_node_reward[neighbor_node.get_node_index()] += rr
                 num_finished_orders += num_assigned_order
@@ -343,8 +356,9 @@ class Node(object):
         assert self.order_num == len(self.orders)
         return reward, num_finished_orders
 
-    def utility_assign_orders_neighbor(self, city, neighbor_node,
-                                       num_assigned_order):
+    def utility_assign_orders_neighbor(
+            self, city, neighbor_node, num_assigned_order
+    ):
 
         served_order_index = []
         reward = 0
@@ -361,7 +375,8 @@ class Node(object):
                     if order_to_serve.get_end_position() is not None:
                         assigned_driver.take_order(order_to_serve)
                         removed_driver = neighbor_node.drivers.pop(
-                            assigned_driver.get_driver_id(), None)
+                            assigned_driver.get_driver_id(), None
+                        )
                         assert removed_driver is not None
                     else:
                         assigned_driver.set_offline()
@@ -369,8 +384,9 @@ class Node(object):
                     break
 
         # remove served orders
-        self.orders = [i for j, i in enumerate(self.orders) if
-                       j not in served_order_index]
+        self.orders = [
+            i for j, i in enumerate(self.orders) if j not in served_order_index
+        ]
         assert self.order_num == len(self.orders)
 
         return reward
@@ -378,7 +394,8 @@ class Node(object):
 
 class Driver(object):
     __slots__ = (
-        "online", "onservice", 'order', 'node', 'city_time', '_driver_id')
+        "online", "onservice", 'order', 'node', 'city_time', '_driver_id'
+    )
 
     def __init__(self, driver_id):
         self.online = True
@@ -456,15 +473,20 @@ class Driver(object):
             else:
                 raise ValueError(
                     'Driver: status_control_eachtime(): order end time less '
-                    'than city time')
+                    'than city time'
+                )
 
 
 class Order(object):
-    __slots__ = ('_begin_p', '_end_p', '_begin_t',
-                 '_t', '_p', '_waiting_time', '_assigned_time')
+    __slots__ = (
+        '_begin_p', '_end_p', '_begin_t', '_t', '_p', '_waiting_time',
+        '_assigned_time'
+    )
 
-    def __init__(self, begin_position, end_position, begin_time, duration,
-                 price, wait_time):
+    def __init__(
+            self, begin_position, end_position, begin_time, duration, price,
+            wait_time
+    ):
         self._begin_p = begin_position  # node
         self._end_p = end_position  # node
         self._begin_t = begin_time

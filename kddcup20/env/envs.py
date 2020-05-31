@@ -16,9 +16,12 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 logger_ch = logging.StreamHandler()
 logger_ch.setLevel(logging.DEBUG)
-logger_ch.setFormatter(logging.Formatter(
-    '%(asctime)s[%(levelname)s][%(lineno)s:%(funcName)s]||%(message)s',
-    datefmt='%Y-%m-%d %H:%M:%S'))
+logger_ch.setFormatter(
+    logging.Formatter(
+        '%(asctime)s[%(levelname)s][%(lineno)s:%(funcName)s]||%(message)s',
+        datefmt='%Y-%m-%d %H:%M:%S'
+    )
+)
 logger.addHandler(logger_ch)
 RANDOM_SEED = 0  # unit test use this random seed.
 
@@ -26,11 +29,24 @@ RANDOM_SEED = 0  # unit test use this random seed.
 class CityReal:
     '''A real city is consists of M*N grids '''
 
-    def __init__(self, mapped_matrix_int, order_num_dist, idle_driver_dist_time,
-                 idle_driver_location_mat, order_time_dist, order_price_dist,
-                 l_max, M, N, n_side, probability=1.0 / 28, real_orders="",
-                 onoff_driver_location_mat="",
-                 global_flag="global", time_interval=10):
+    def __init__(
+            self,
+            mapped_matrix_int,
+            order_num_dist,
+            idle_driver_dist_time,
+            idle_driver_location_mat,
+            order_time_dist,
+            order_price_dist,
+            l_max,
+            M,
+            N,
+            n_side,
+            probability=1.0 / 28,
+            real_orders="",
+            onoff_driver_location_mat="",
+            global_flag="global",
+            time_interval=10
+    ):
         """
         :param mapped_matrix_int: 2D matrix: each position is either -100 or
         grid id from order in real data.
@@ -66,8 +82,9 @@ class CityReal:
         # City.__init__(self, M, N, n_side, time_interval)
         self.M = M  # row numbers
         self.N = N  # column numbers
-        self.nodes = [Node(i) for i in
-                      xrange(M * N)]  # a list of nodes: node id start from 0
+        self.nodes = [
+            Node(i) for i in xrange(M * N)
+        ]  # a list of nodes: node id start from 0
         self.drivers = {}  # driver[driver_id] = driver_instance  , driver_id
         # start from 0
         self.n_drivers = 0  # total idle number of drivers. online and not on
@@ -102,12 +119,14 @@ class CityReal:
         self.idle_driver_location_mat = idle_driver_location_mat
 
         self.order_time_dist = order_time_dist[:l_max] / np.sum(
-            order_time_dist[:l_max])
+            order_time_dist[:l_max]
+        )
         self.order_price_dist = order_price_dist
 
         target_node_ids = []
         target_grids_sorted = np.sort(
-            mapped_matrix_int[np.where(mapped_matrix_int > 0)])
+            mapped_matrix_int[np.where(mapped_matrix_int > 0)]
+        )
         for item in target_grids_sorted:
             x, y = np.where(mapped_matrix_int == item)
             target_node_ids.append(ids_2dto1d(x, y, M, N)[0])
@@ -122,10 +141,12 @@ class CityReal:
         # start time, end time, price.
 
         self.p = probability  # sample probability
-        self.time_keys = [int(dt.strftime('%H%M')) for dt in
-                          datetime_range(datetime(2017, 9, 1, 0),
-                                         datetime(2017, 9, 2, 0),
-                                         timedelta(minutes=time_interval))]
+        self.time_keys = [
+            int(dt.strftime('%H%M')) for dt in datetime_range(
+                datetime(2017, 9, 1, 0), datetime(2017, 9, 2, 0),
+                timedelta(minutes=time_interval)
+            )
+        ]
         self.day_orders = []  # one day's order.
 
         self.onoff_driver_location_mat = onoff_driver_location_mat
@@ -135,7 +156,8 @@ class CityReal:
         self.all_grids_off_number = 0
 
         self.out_grid_in_orders = np.zeros(
-            (self.n_intervals, len(self.target_grids)))
+            (self.n_intervals, len(self.target_grids))
+        )
         self.global_flag = global_flag
         self.weights_layers_neighbors = [1.0, np.exp(-1), np.exp(-2)]
 
@@ -149,14 +171,16 @@ class CityReal:
             if current_node is not None:
                 i, j = ids_1dto2d(idx, M, N)
                 current_node.set_neighbors(
-                    get_neighbor_list(i, j, M, N, n, self.nodes))
+                    get_neighbor_list(i, j, M, N, n, self.nodes)
+                )
 
     def construct_mapping(self):
         """
         :return:
         """
-        target_grid_id = self.mapped_matrix_int[
-            np.where(self.mapped_matrix_int > 0)]
+        target_grid_id = self.mapped_matrix_int[np.where(
+            self.mapped_matrix_int > 0
+        )]
         for g_id, n_id in zip(target_grid_id, self.target_grids):
             self.node_mapping[g_id] = n_id
 
@@ -166,7 +190,7 @@ class CityReal:
         """
         row_inds, col_inds = np.where(mapped_matrix_int >= 0)
 
-        target_ids = []  # start from 0. 
+        target_ids = []  # start from 0.
         for x, y in zip(row_inds, col_inds):
             node_id = ids_2dto1d(x, y, self.M, self.N)
             self.nodes[node_id] = Node(node_id)  # node id start from 0.
@@ -174,8 +198,9 @@ class CityReal:
 
         for x, y in zip(row_inds, col_inds):
             node_id = ids_2dto1d(x, y, self.M, self.N)
-            self.nodes[node_id].get_layers_neighbors(self.l_max, self.M, self.N,
-                                                     self)
+            self.nodes[node_id].get_layers_neighbors(
+                self.l_max, self.M, self.N, self
+            )
 
         self.target_grids = target_ids
         self.n_valid_grids = len(target_ids)
@@ -187,7 +212,10 @@ class CityReal:
             i, j = ids_1dto2d(idx, self.M, self.N)
             if current_node is not None:
                 current_node.set_neighbors(
-                    get_neighbor_list(i, j, self.M, self.N, n_side, self.nodes))
+                    get_neighbor_list(
+                        i, j, self.M, self.N, n_side, self.nodes
+                    )
+                )
 
     def initial_order_random(self, distribution_all, dis_paras_all):
         """ Initialize order distribution
@@ -196,15 +224,17 @@ class CityReal:
         """
         for idx, node in enumerate(self.nodes):
             if node is not None:
-                node.order_distribution(distribution_all[idx],
-                                        dis_paras_all[idx])
+                node.order_distribution(
+                    distribution_all[idx], dis_paras_all[idx]
+                )
 
     def get_observation(self):
         next_state = np.zeros((2, self.M, self.N))
         for _node in self.nodes:
             if _node is not None:
-                row_id, column_id = ids_1dto2d(_node.get_node_index(), self.M,
-                                               self.N)
+                row_id, column_id = ids_1dto2d(
+                    _node.get_node_index(), self.M, self.N
+                )
                 next_state[0, row_id, column_id] = _node.idle_driver_num
                 next_state[1, row_id, column_id] = _node.order_num
 
@@ -227,10 +257,11 @@ class CityReal:
         next_state = np.zeros((self.M, self.N))
         for _node in self.nodes:
             if _node is not None:
-                row_id, column_id = ids_1dto2d(_node.get_node_index(), self.M,
-                                               self.N)
-                next_state[
-                    row_id, column_id] = _node.get_idle_driver_numbers_loop()
+                row_id, column_id = ids_1dto2d(
+                    _node.get_node_index(), self.M, self.N
+                )
+                next_state[row_id, column_id
+                           ] = _node.get_idle_driver_numbers_loop()
 
         return next_state
 
@@ -330,27 +361,34 @@ class CityReal:
     def utility_add_driver_real_new(self, num_added_driver):
         curr_idle_driver_distribution = self.get_observation()[0]
         curr_idle_driver_distribution_resort = np.array(
-            [int(curr_idle_driver_distribution.flatten()[index]) for index in
-             self.target_node_ids])
+            [
+                int(curr_idle_driver_distribution.flatten()[index])
+                for index in self.target_node_ids
+            ]
+        )
 
         idle_driver_distribution = self.idle_driver_location_mat[
-                                   self.city_time % self.n_intervals, :]
+            self.city_time % self.n_intervals, :]
 
         idle_diff = idle_driver_distribution.astype(
-            int) - curr_idle_driver_distribution_resort
+            int
+        ) - curr_idle_driver_distribution_resort
         idle_diff[np.where(idle_diff <= 0)] = 0
 
-        node_ids = np.random.choice(self.target_node_ids,
-                                    size=[num_added_driver],
-                                    p=idle_diff / float(np.sum(idle_diff)))
+        node_ids = np.random.choice(
+            self.target_node_ids,
+            size=[num_added_driver],
+            p=idle_diff / float(np.sum(idle_diff))
+        )
 
         n_total_drivers = len(self.drivers.keys())
         for ii, node_id in enumerate(node_ids):
             added_driver_id = n_total_drivers + ii
             self.drivers[added_driver_id] = Driver(added_driver_id)
             self.drivers[added_driver_id].set_position(self.nodes[node_id])
-            self.nodes[node_id].add_driver(added_driver_id,
-                                           self.drivers[added_driver_id])
+            self.nodes[node_id].add_driver(
+                added_driver_id, self.drivers[added_driver_id]
+            )
 
         self.n_drivers += num_added_driver
 
@@ -360,22 +398,28 @@ class CityReal:
         # self.mapped_matrix_int > 0)]
         curr_idle_driver_distribution = self.get_observation()[0]
         curr_idle_driver_distribution_resort = np.array(
-            [int(curr_idle_driver_distribution.flatten()[index]) for index in
-             self.target_node_ids])
+            [
+                int(curr_idle_driver_distribution.flatten()[index])
+                for index in self.target_node_ids
+            ]
+        )
 
         idle_driver_distribution = self.idle_driver_location_mat[
-                                   self.city_time % self.n_intervals, :]
+            self.city_time % self.n_intervals, :]
 
         idle_diff = idle_driver_distribution.astype(
-            int) - curr_idle_driver_distribution_resort
+            int
+        ) - curr_idle_driver_distribution_resort
         idle_diff[np.where(idle_diff <= 0)] = 0
 
         if float(np.sum(idle_diff)) == 0:
             return
         np.random.seed(self.RANDOM_SEED)
-        node_ids = np.random.choice(self.target_node_ids,
-                                    size=[num_added_driver],
-                                    p=idle_diff / float(np.sum(idle_diff)))
+        node_ids = np.random.choice(
+            self.target_node_ids,
+            size=[num_added_driver],
+            p=idle_diff / float(np.sum(idle_diff))
+        )
 
         for ii, node_id in enumerate(node_ids):
 
@@ -389,8 +433,9 @@ class CityReal:
                 added_driver_id = n_total_drivers
                 self.drivers[added_driver_id] = Driver(added_driver_id)
                 self.drivers[added_driver_id].set_position(self.nodes[node_id])
-                self.nodes[node_id].add_driver(added_driver_id,
-                                               self.drivers[added_driver_id])
+                self.nodes[node_id].add_driver(
+                    added_driver_id, self.drivers[added_driver_id]
+                )
                 self.n_drivers += 1
 
     def utility_add_driver_real_nodewise(self, node_id, num_added_driver):
@@ -406,13 +451,15 @@ class CityReal:
                 added_driver_id = n_total_drivers
                 self.drivers[added_driver_id] = Driver(added_driver_id)
                 self.drivers[added_driver_id].set_position(self.nodes[node_id])
-                self.nodes[node_id].add_driver(added_driver_id,
-                                               self.drivers[added_driver_id])
+                self.nodes[node_id].add_driver(
+                    added_driver_id, self.drivers[added_driver_id]
+                )
                 self.n_drivers += 1
             num_added_driver -= 1
 
-    def utility_set_drivers_offline_real_nodewise(self, node_id,
-                                                  n_drivers_to_off):
+    def utility_set_drivers_offline_real_nodewise(
+            self, node_id, n_drivers_to_off
+    ):
 
         while n_drivers_to_off > 0:
             if self.nodes[node_id].idle_driver_num > 0:
@@ -428,12 +475,15 @@ class CityReal:
 
         curr_idle_driver_distribution = self.get_observation()[0]
         curr_idle_driver_distribution_resort = np.array(
-            [int(curr_idle_driver_distribution.flatten()[index])
-             for index in self.target_node_ids])
+            [
+                int(curr_idle_driver_distribution.flatten()[index])
+                for index in self.target_node_ids
+            ]
+        )
 
         # historical idle driver distribution
         idle_driver_distribution = self.idle_driver_location_mat[
-                                   self.city_time % self.n_intervals, :]
+            self.city_time % self.n_intervals, :]
 
         # diff of curr idle driver distribution and history
         idle_diff = curr_idle_driver_distribution_resort - \
@@ -441,8 +491,11 @@ class CityReal:
                         int)
         idle_diff[np.where(idle_diff <= 0)] = 0
 
-        n_drivers_can_be_off = int(np.sum(
-            curr_idle_driver_distribution_resort[np.where(idle_diff >= 0)]))
+        n_drivers_can_be_off = int(
+            np.sum(
+                curr_idle_driver_distribution_resort[np.where(idle_diff >= 0)]
+            )
+        )
         if n_drivers_to_off > n_drivers_can_be_off:
             n_drivers_to_off = n_drivers_can_be_off
 
@@ -450,9 +503,11 @@ class CityReal:
         if sum_idle_diff == 0:
             return
         np.random.seed(self.RANDOM_SEED)
-        node_ids = np.random.choice(self.target_node_ids,
-                                    size=[n_drivers_to_off],
-                                    p=idle_diff / float(sum_idle_diff))
+        node_ids = np.random.choice(
+            self.target_node_ids,
+            size=[n_drivers_to_off],
+            p=idle_diff / float(sum_idle_diff)
+        )
 
         for ii, node_id in enumerate(node_ids):
             if self.nodes[node_id].idle_driver_num > 0:
@@ -465,18 +520,20 @@ class CityReal:
 
         num_all_orders = len(self.real_orders)
         index_sampled_orders = np.where(
-            np.random.binomial(1, self.p, num_all_orders) == 1)
+            np.random.binomial(1, self.p, num_all_orders) == 1
+        )
         one_day_orders = self.real_orders[index_sampled_orders]
 
         self.out_grid_in_orders = np.zeros(
-            (self.n_intervals, len(self.target_grids)))
+            (self.n_intervals, len(self.target_grids))
+        )
 
         day_orders = [[] for _ in np.arange(self.n_intervals)]
         for iorder in one_day_orders:
             #  iorder: [92, 300, 143, 2, 13.2]
             start_time = int(iorder[2])
-            if iorder[0] not in self.node_mapping.keys() and iorder[
-                1] not in self.node_mapping.keys():
+            if iorder[0] not in self.node_mapping.keys(
+            ) and iorder[1] not in self.node_mapping.keys():
                 continue
             start_node = self.node_mapping.get(iorder[0], -100)
             end_node = self.node_mapping.get(iorder[1], -100)
@@ -485,13 +542,13 @@ class CityReal:
 
             if start_node == -100:
                 column_index = self.target_grids.index(end_node)
-                self.out_grid_in_orders[(
-                                                start_time + duration) %
+                self.out_grid_in_orders[(start_time + duration) %
                                         self.n_intervals, column_index] += 1
                 continue
 
             day_orders[start_time].append(
-                [start_node, end_node, start_time, duration, price])
+                [start_node, end_node, start_time, duration, price]
+            )
         self.day_orders = day_orders
 
     def step_driver_status_control(self):
@@ -519,16 +576,18 @@ class CityReal:
             curr_mu = curr_onoff_distribution[idx, 0]
             curr_sigma = curr_onoff_distribution[idx, 1]
             on_off_number = np.round(
-                np.random.normal(curr_mu, curr_sigma, 1)[0]).astype(int)
+                np.random.normal(curr_mu, curr_sigma, 1)[0]
+            ).astype(int)
 
             if on_off_number > 0:
-                self.utility_add_driver_real_nodewise(target_node_id,
-                                                      on_off_number)
+                self.utility_add_driver_real_nodewise(
+                    target_node_id, on_off_number
+                )
                 self.all_grids_on_number += on_off_number
             elif on_off_number < 0:
-                self.utility_set_drivers_offline_real_nodewise(target_node_id,
-                                                               abs(
-                                                                   on_off_number))
+                self.utility_set_drivers_offline_real_nodewise(
+                    target_node_id, abs(on_off_number)
+                )
             else:
                 pass
 
@@ -546,11 +605,13 @@ class CityReal:
         if n_idle_drivers > self.n_drivers:
 
             self.utility_add_driver_real_new_offlinefirst(
-                n_idle_drivers - self.n_drivers)
+                n_idle_drivers - self.n_drivers
+            )
 
         elif n_idle_drivers < self.n_drivers:
             self.utility_set_drivers_offline_real_new(
-                self.n_drivers - n_idle_drivers)
+                self.n_drivers - n_idle_drivers
+            )
         else:
             pass
 
@@ -576,11 +637,13 @@ class CityReal:
                             break
 
                 self.utility_add_driver_real_new(
-                    n_idle_drivers - self.n_drivers)
+                    n_idle_drivers - self.n_drivers
+                )
 
         elif n_idle_drivers < self.n_drivers:
             self.utility_set_drivers_offline_real_new(
-                self.n_drivers - n_idle_drivers)
+                self.n_drivers - n_idle_drivers
+            )
         else:
             pass
 
@@ -603,10 +666,10 @@ class CityReal:
                 node_id = node.get_node_index()
                 # generate orders start from each node
                 random_seed = node.get_node_index() + self.city_time
-                node.generate_order_real(self.l_max, self.order_time_dist,
-                                         self.order_price_dist,
-                                         self.city_time, self.nodes,
-                                         random_seed)
+                node.generate_order_real(
+                    self.l_max, self.order_time_dist, self.order_price_dist,
+                    self.city_time, self.nodes, random_seed
+                )
 
     def step_bootstrap_order_real(self, day_orders_t):
         for iorder in day_orders_t:
@@ -618,8 +681,9 @@ class CityReal:
                 end_node = self.nodes[end_node_id]
             else:
                 end_node = None
-            start_node.add_order_real(self.city_time, end_node, iorder[3],
-                                      iorder[4])
+            start_node.add_order_real(
+                self.city_time, end_node, iorder[3], iorder[4]
+            )
 
     def step_assign_order(self):
 
@@ -636,7 +700,9 @@ class CityReal:
                 all_order_num += all_order_num_node
                 finished_order_num += finished_order_num_node
         if all_order_num != 0:
-            self.order_response_rate = finished_order_num / float(all_order_num)
+            self.order_response_rate = finished_order_num / float(
+                all_order_num
+            )
         else:
             self.order_response_rate = -1
         return reward
@@ -676,7 +742,9 @@ class CityReal:
 
         node_reward = node_reward + neighbor_reward
         if all_order_num != 0:
-            self.order_response_rate = finished_order_num / float(all_order_num)
+            self.order_response_rate = finished_order_num / float(
+                all_order_num
+            )
         else:
             self.order_response_rate = -1
 
@@ -716,8 +784,12 @@ class CityReal:
                         if remain_orders_1d[curr_node_id] == 0:
                             break
 
-        context = np.array([remain_drivers_1d.reshape(self.M, self.N),
-                            remain_orders_1d.reshape(self.M, self.N)])
+        context = np.array(
+            [
+                remain_drivers_1d.reshape(self.M, self.N),
+                remain_orders_1d.reshape(self.M, self.N)
+            ]
+        )
         return context
 
     def step_dispatch_invalid(self, dispatch_actions):
@@ -751,14 +823,14 @@ class CityReal:
                     self.all_grids_off_number += 1
                 continue
 
-            if self.nodes[end_node_id] not in self.nodes[
-                start_node_id].neighbors:
+            if self.nodes[end_node_id] not in self.nodes[start_node_id
+                                                         ].neighbors:
                 raise ValueError('City:step(): not a feasible dispatch')
 
             for _ in np.arange(num_of_drivers):
                 # t = 1 dispatch start, idle driver decrease
-                remove_driver_id = self.nodes[
-                    start_node_id].remove_idle_driver_random()
+                remove_driver_id = self.nodes[start_node_id
+                                              ].remove_idle_driver_random()
                 save_remove_id.append((end_node_id, remove_driver_id))
                 self.drivers[remove_driver_id].set_position(None)
                 self.drivers[remove_driver_id].set_offline_for_start_dispatch()
@@ -770,11 +842,12 @@ class CityReal:
         # drivers dispatched at t, arrived at t + 1
         for destination_node_id, arrive_driver_id in save_remove_id:
             self.drivers[arrive_driver_id].set_position(
-                self.nodes[destination_node_id])
+                self.nodes[destination_node_id]
+            )
             self.drivers[arrive_driver_id].set_online_for_finish_dispatch()
-            self.nodes[destination_node_id].add_driver(arrive_driver_id,
-                                                       self.drivers[
-                                                           arrive_driver_id])
+            self.nodes[destination_node_id].add_driver(
+                arrive_driver_id, self.drivers[arrive_driver_id]
+            )
             self.n_drivers += 1
 
     def step_increase_city_time(self):
@@ -792,7 +865,6 @@ class CityReal:
 
         reward, reward_node = \
             self.step_assign_order_broadcast_neighbor_reward_update()
-
         '''**************************** T = 2 ****************************'''
         # increase city time t + 1
         self.step_increase_city_time()

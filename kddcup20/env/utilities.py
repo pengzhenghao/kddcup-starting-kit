@@ -107,19 +107,15 @@ def get_neighbor_index(i, j):
     """
     neighbor_matrix_ids = []
     if j % 2 == 0:
-        neighbor_matrix_ids = [[i - 1, j],
-                               [i, j + 1],
-                               [i + 1, j + 1],
-                               [i + 1, j],
-                               [i + 1, j - 1],
-                               [i, j - 1]]
+        neighbor_matrix_ids = [
+            [i - 1, j], [i, j + 1], [i + 1, j + 1], [i + 1, j], [i + 1, j - 1],
+            [i, j - 1]
+        ]
     elif j % 2 == 1:
-        neighbor_matrix_ids = [[i - 1, j],
-                               [i - 1, j + 1],
-                               [i, j + 1],
-                               [i + 1, j],
-                               [i, j - 1],
-                               [i - 1, j - 1]]
+        neighbor_matrix_ids = [
+            [i - 1, j], [i - 1, j + 1], [i, j + 1], [i + 1, j], [i, j - 1],
+            [i - 1, j - 1]
+        ]
 
     return neighbor_matrix_ids
 
@@ -189,14 +185,19 @@ def get_driver_status(env):
 
 def debug_print_drivers(node):
     print("Status of all drivers in the node {}".format(node.get_node_index()))
-    print("|{:12}|{:12}|{:12}|{:12}|".format("driver id", "driver location",
-                                             "online", "onservice"))
+    print(
+        "|{:12}|{:12}|{:12}|{:12}|".format(
+            "driver id", "driver location", "online", "onservice"
+        )
+    )
 
     for driver_id, cur_drivers in node.drivers.iteritems():
         if cur_drivers.node is not None:
             node_id = cur_drivers.node.get_node_index()
         else:
             node_id = "none"
-        print("|{:12}|{:12}|{:12}|{:12}|".format(driver_id, node_id,
-                                                 cur_drivers.online,
-                                                 cur_drivers.onservice))
+        print(
+            "|{:12}|{:12}|{:12}|{:12}|".format(
+                driver_id, node_id, cur_drivers.online, cur_drivers.onservice
+            )
+        )

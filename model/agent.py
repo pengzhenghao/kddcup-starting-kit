@@ -31,12 +31,15 @@ class Agent(object):
         :return: a list of dict, the key in the dict includes:
             order_id and driver_id, the pair indicating the assignment
         """
-        order_ids = list(set(obs["order_id"] for obs in dispatch_observ))
-        driver_ids = list(set(obs["driver_id"] for obs in dispatch_observ))
-        dispatch_action = [
-            dict(order_id=order_id, driver_id=random.choice(driver_ids))
-            for order_id in order_ids
-        ]
+        order_ids = set(obs["order_id"] for obs in dispatch_observ)
+        driver_ids = set(obs["driver_id"] for obs in dispatch_observ)
+        dispatch_action = []
+        for order_id in list(order_ids):
+            driver_id = random.choice(driver_ids)
+            dispatch_action.append(
+                dict(order_id=order_id, driver_id=driver_id)
+            )
+            driver_ids.remove(driver_id)
         return dispatch_action
 
     def reposition(self, repo_observ):

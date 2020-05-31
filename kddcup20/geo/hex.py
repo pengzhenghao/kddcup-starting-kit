@@ -13,7 +13,7 @@ class InvalidHex(ValueError):
 
 
 class Hex(namedtuple("Hex", "x y")):
-    "A single hexagon in a hexagonal grid."""
+    "A single hexagon in a hexagonal grid." ""
     _neighbours = ((2, 0), (1, 1), (-1, 1), (-2, 0), (-1, -1), (1, -1))
 
     def __new__(cls, x, y):
@@ -102,8 +102,9 @@ class Hex(namedtuple("Hex", "x y")):
             visible = {}
         visible[self] = all_directions
         for direction in range(6):
-            _fovtree._field_of_view(self, direction, transparent, max_distance,
-                                    visible)
+            _fovtree._field_of_view(
+                self, direction, transparent, max_distance, visible
+            )
         return visible
 
     def find_path(self, destination, passable, cost=lambda pos: 1):
@@ -124,11 +125,8 @@ all_directions = (1 << 6) - 1
 origin = Hex(0, 0)
 
 Hex.rotations = (
-    lambda x: x,
-    operator.methodcaller("rotate_left"),
-    lambda x: -x.rotate_right(),
-    operator.neg,
-    lambda x: -x.rotate_left(),
+    lambda x: x, operator.methodcaller("rotate_left"),
+    lambda x: -x.rotate_right(), operator.neg, lambda x: -x.rotate_left(),
     operator.methodcaller("rotate_right")
 )
 
@@ -151,16 +149,18 @@ class _FovTree:
         x, y = self.hexagon
         return (3 * y + cy) / float(x + cx)
 
-    def _field_of_view(self, offset, direction, transparent, max_distance,
-                       visible):
+    def _field_of_view(
+            self, offset, direction, transparent, max_distance, visible
+    ):
         if self.distance > max_distance:
             return
         hexagon = offset + self.hexagons[direction]
         if transparent(hexagon):
             visible[hexagon] = all_directions
             for succ in self.successors():
-                succ._field_of_view(offset, direction, transparent,
-                                    max_distance, visible)
+                succ._field_of_view(
+                    offset, direction, transparent, max_distance, visible
+                )
         else:
             directions = 1 << ((self.direction + direction) % 6)
             visible[hexagon] = directions | visible.get(hexagon, 0)
@@ -177,7 +177,8 @@ class _FovTree:
                 if c1 < c2:
                     nb = self._neighbours[i]
                     _cached_successors.append(
-                        _FovTree(hexagon + nb, (i - 1) % 6, c1, c2))
+                        _FovTree(hexagon + nb, (i - 1) % 6, c1, c2)
+                    )
             self._cached_successors = _cached_successors
 
         return _cached_successors
@@ -200,7 +201,9 @@ def _tiled_range(lo, hi, tile_size):
 
 
 def _make_range(x, width, bloat, grid_size):
-    return _tiled_range(x + grid_size - 1 - bloat, x + width + bloat, grid_size)
+    return _tiled_range(
+        x + grid_size - 1 - bloat, x + width + bloat, grid_size
+    )
 
 
 class HexGrid(namedtuple("HexGrid", "width height")):
@@ -231,7 +234,9 @@ class HexGrid(namedtuple("HexGrid", "width height")):
         width, height = self
         x0, y0 = hex
         y0 *= 3
-        return [(width * (x + x0), height * (y + y0)) for x, y in self._corners]
+        return [
+            (width * (x + x0), height * (y + y0)) for x, y in self._corners
+        ]
 
     def center(self, hex):
         """Get the center (as (x, y) tuple) of a hexagon."""
@@ -269,7 +274,9 @@ class HexGrid(namedtuple("HexGrid", "width height")):
         width, height = self
         x_range = _make_range(rx, r_width, width, width)
         y_range = _make_range(ry, r_height, 2 * height, 3 * height)
-        return (Hex(x, y) for y in y_range for x in x_range if (x + y) % 2 == 0)
+        return (
+            Hex(x, y) for y in y_range for x in x_range if (x + y) % 2 == 0
+        )
 
 
 class HexPathFinder:
